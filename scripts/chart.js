@@ -1,14 +1,16 @@
 $(function () {
-	var charts = ["weight", "bmi", "fat", "water"];
+	var charts = [ 'weight',, "bmi", "fat", "water" ];
+	var targets = {
+		weight : 75,
+		bmi : 27.5,
+		fat : 18,
+		water : 55
+	};
 
-	var options = {
+	var defaultOptions = {
 		series: {
 			lines: { show: true },
 			points: { show: true }
-		},
-		grid: {
-			hoverable: true,
-			clickable: true
 		},
 		xaxis: {
 			mode: "time",
@@ -17,13 +19,27 @@ $(function () {
 		}
 	};
 
+	var measurements = function(series) {
+		return $.map(series, function(point) { return point[1] });
+	};
+
 	var fillChart = function (chart, data, field) {
 		var series = $.map(data, function (entry) {
 			return [
 				[new Date(entry.date), entry[field]]
 			];
 		});
-		$.plot(chart, [series], options);
+
+		var chartOptions = $.extend({}, defaultOptions);
+
+		chartOptions.grid = { markings : [ { yaxis: { from: targets[field], to: targets[field] }, lineWidth : 1, color: "#88dd88" } ] };
+
+		chartOptions.yaxis = {
+			min : Math.min(targets[field], _.min(measurements(series))) * 0.90,
+			max : Math.max(targets[field], _.max(measurements(series))) * 1.1
+		};
+
+		$.plot(chart, [series], chartOptions);
 	};
 
 	$.getJSON('data.json', function (data) {
